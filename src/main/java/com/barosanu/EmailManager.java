@@ -3,7 +3,6 @@ package com.barosanu;
 import com.barosanu.controller.services.FetchFolderService;
 import com.barosanu.model.EmailAccount;
 import com.barosanu.model.EmailTreeItem;
-import javafx.scene.control.TreeItem;
 
 public class EmailManager {
     //Folder handling

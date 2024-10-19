@@ -12,6 +12,11 @@ javafx {
     modules = ['javafx.controls', 'javafx.fxml', 'javafx.web']
 }
 
+//tasks.withType(JavaCompile) {
+//    options.compilerArgs << "-Xlint:unchecked"
+//}
+
+
 repositories {
     mavenCentral()
 }
