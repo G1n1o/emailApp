@@ -47,6 +47,8 @@ public class MainWindowController extends BaseController implements Initializabl
     @FXML
     private TreeView<String> emailsTreeView;
 
+
+
     private MessageRendererService messageRendererService;
 
 
@@ -63,6 +65,12 @@ public class MainWindowController extends BaseController implements Initializabl
     void addAccountAction() {
         viewFactory.showLoginWindow();
     }
+
+    @FXML
+    void composeMessageAction() {
+        viewFactory.showComposeMessageWindow();
+    }
+
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
