@@ -47,40 +47,56 @@ public class MessageRendererService extends Service {
         };
     }
 
-    private void loadMessage() throws MessagingException, IOException {
-        stringBuffer.setLength(0); // clears the StringBuffer
-        Message message = emailMessage.getMessage();
-        String contentType = message.getContentType();
-        if (isSimpleType(contentType)) {
-            stringBuffer.append(message.getContent().toString());
-        } else if (isMultipartType(contentType)) {
-            Multipart multipart = (Multipart) message.getContent();
-            for (int i = multipart.getCount() - 1; i >= 0; i--) {
-                BodyPart bodyPart = multipart.getBodyPart(i);
-                String bodyPartContentType = bodyPart.getContentType();
-                if (isSimpleType(bodyPartContentType)) {
-                    stringBuffer.append(bodyPart.getContent().toString());
-                }
+////    private void loadMessage() throws MessagingException, IOException {
+////        stringBuffer.setLength(0); // clears the StringBuffer
+////        Message message = emailMessage.getMessage();
+////        String contentType = message.getContentType();
+////        if (isSimpleType(contentType)) {
+////            stringBuffer.append(message.getContent().toString());
+////        } else if (isMultipartType(contentType)) {
+////            Multipart multipart = (Multipart) message.getContent();
+////            for (int i = multipart.getCount() - 1; i >= 0; i--) {
+////                BodyPart bodyPart = multipart.getBodyPart(i);
+////                String bodyPartContentType = bodyPart.getContentType();
+////                if (isSimpleType(bodyPartContentType)) {
+////                    stringBuffer.append(bodyPart.getContent().toString());
+////                }
+////            }
+////        }
+////    }
+private void loadMessage() throws MessagingException, IOException {
+    stringBuffer.setLength(0); // clears the StringBuffer
+    Message message = emailMessage.getMessage();
+    Object content = message.getContent();
+
+    if (content instanceof String) {
+
+        stringBuffer.append(content.toString());
+    } else if (content instanceof Multipart) {
+
+        Multipart multipart = (Multipart) content;
+        for (int i = 0; i < multipart.getCount(); i++) {
+            BodyPart bodyPart = multipart.getBodyPart(i);
+            if (bodyPart.isMimeType("text/html")) {
+                stringBuffer.setLength(0);
+                stringBuffer.append(bodyPart.getContent().toString());
+                break;
+            } else if (bodyPart.isMimeType("text/plain") && stringBuffer.length() == 0) {
+
+                stringBuffer.append(bodyPart.getContent().toString());
             }
         }
     }
+}
 
     private boolean isSimpleType(String contentType) {
-        if (contentType.contains("TEXT/HTML") ||
+        return contentType.contains("TEXT/HTML") ||
                 contentType.contains("mixed") ||
-                contentType.contains("text")) {
-            return true;
-        } else {
-            return false;
-        }
+                contentType.contains("text");
     }
 
     private boolean isMultipartType(String contentType) {
-        if (contentType.contains("multipart")) {
-            return true;
-        } else {
-            return false;
-        }
+        return contentType.contains("multipart");
     }
 
 }
