@@ -9,6 +9,7 @@ import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
+import javax.mail.internet.MimeBodyPart;
 import java.io.IOException;
 
 public class MessageRendererService extends Service {
@@ -20,23 +21,22 @@ public class MessageRendererService extends Service {
     public MessageRendererService(WebEngine webEngine) {
         this.webEngine = webEngine;
         this.stringBuffer = new StringBuffer();
-        this.setOnSucceeded(event -> {
-            displayMessage();
-        });
+        this.setOnSucceeded(event -> displayMessage());
     }
 
     public void setEmailMessage(EmailMessage emailMessage) {
         this.emailMessage = emailMessage;
     }
+
     private void displayMessage() {
         webEngine.loadContent(stringBuffer.toString());
     }
 
     @Override
-    protected Task createTask() {
-        return new Task() {
+    protected Task<Void> createTask() {
+        return new Task<Void>() {
             @Override
-            protected Object call() throws Exception {
+            protected Void call() throws Exception {
                 try {
                     loadMessage();
                 } catch (Exception e) {
@@ -47,56 +47,56 @@ public class MessageRendererService extends Service {
         };
     }
 
-////    private void loadMessage() throws MessagingException, IOException {
-////        stringBuffer.setLength(0); // clears the StringBuffer
-////        Message message = emailMessage.getMessage();
-////        String contentType = message.getContentType();
-////        if (isSimpleType(contentType)) {
-////            stringBuffer.append(message.getContent().toString());
-////        } else if (isMultipartType(contentType)) {
-////            Multipart multipart = (Multipart) message.getContent();
-////            for (int i = multipart.getCount() - 1; i >= 0; i--) {
-////                BodyPart bodyPart = multipart.getBodyPart(i);
-////                String bodyPartContentType = bodyPart.getContentType();
-////                if (isSimpleType(bodyPartContentType)) {
-////                    stringBuffer.append(bodyPart.getContent().toString());
-////                }
-////            }
-////        }
-////    }
-private void loadMessage() throws MessagingException, IOException {
-    stringBuffer.setLength(0); // clears the StringBuffer
-    Message message = emailMessage.getMessage();
-    Object content = message.getContent();
+    private void loadMessage() throws MessagingException, IOException {
+        stringBuffer.setLength(0); //clears the SB
+        emailMessage.clearAttachmentList();
+        Message message = emailMessage.getMessage();
+        String contentType = message.getContentType();
+        if(isSimpleType(contentType)){
+            stringBuffer.append(message.getContent().toString());
+        } else if(isMultipartType(contentType)){
+            Multipart multipart = (Multipart) message.getContent();
+            loadMultipart(multipart, stringBuffer);
+        }
+    }
 
-    if (content instanceof String) {
-
-        stringBuffer.append(content.toString());
-    } else if (content instanceof Multipart) {
-
-        Multipart multipart = (Multipart) content;
-        for (int i = 0; i < multipart.getCount(); i++) {
+    private void loadMultipart(Multipart multipart, StringBuffer stringBuffer) throws MessagingException, IOException {
+        for (int i = multipart.getCount() - 1; i>=0; i--){
             BodyPart bodyPart = multipart.getBodyPart(i);
-            if (bodyPart.isMimeType("text/html")) {
-                stringBuffer.setLength(0);
+            String contentType = bodyPart.getContentType();
+            if (isSimpleType(contentType)){
                 stringBuffer.append(bodyPart.getContent().toString());
-                break;
-            } else if (bodyPart.isMimeType("text/plain") && stringBuffer.length() == 0) {
-
-                stringBuffer.append(bodyPart.getContent().toString());
+            } else if(isMultipartType(contentType)){
+                Multipart multipart2 = (Multipart) bodyPart.getContent();
+                loadMultipart(multipart2, stringBuffer);
+            } else if(!isTextPlain(contentType)){
+                //here we get the attachments:
+                MimeBodyPart mbp = (MimeBodyPart) bodyPart;
+                emailMessage.addAttachment(mbp);
             }
         }
     }
-}
+
+    private boolean isTextPlain(String contentType){
+        return  contentType.contains("TEXT/PLAIN");
+    }
+
 
     private boolean isSimpleType(String contentType) {
-        return contentType.contains("TEXT/HTML") ||
-                contentType.contains("mixed") ||
-                contentType.contains("text");
+        if(contentType.contains("TEXT/HTML") ||
+//                contentType.contains("mixed") ||
+                contentType.contains("text")) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private boolean isMultipartType(String contentType) {
-        return contentType.contains("multipart");
+        if (contentType.contains("multipart")) {
+            return true;
+        } else {
+            return false;
+        }
     }
-
 }

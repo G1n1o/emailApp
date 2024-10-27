@@ -42,7 +42,7 @@ public class ViewFactory {
     }
 
     //View options handling:
-    private ColorTheme colorTheme = ColorTheme.DARK;
+    private ColorTheme colorTheme = ColorTheme.DEFAULT;
     private FontSize fontSize = FontSize.MEDIUM;
 
 
@@ -59,6 +59,10 @@ public class ViewFactory {
         BaseController controller = new MainWindowController(emailManager,this, "/view/MainWindow.fxml");
         initializeStage(controller);
         mainViewInitialized = true;
+    }
+    public void showEmailDetailsWindow(){
+        BaseController controller = new EmailDetailsController(emailManager, this, "/view/EmailDetailsWindow.fxml");
+        initializeStage(controller);
     }
 
     public void showOptionsWindow(){
