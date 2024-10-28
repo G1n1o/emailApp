@@ -40,7 +40,7 @@ public class ComposeMessageController extends BaseController implements Initiali
     private ChoiceBox<EmailAccount> emailAccountChoice;
 
     @FXML
-    void attachButtonAction() {
+    void attachBtnAction() {
         FileChooser fileChooser = new FileChooser();
         File selectFile = fileChooser.showOpenDialog(null);
         if(selectFile != null) {
